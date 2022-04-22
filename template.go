@@ -1,11 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"embed"
-	"encoding/json"
 	"html/template"
+	"io"
 )
+
+type templateGenerator func(io.Writer, Service) error
 
 //go:embed ui.gohtml
 var uiFs embed.FS
@@ -13,7 +14,9 @@ var uiFs embed.FS
 type templateData struct {
 	Title       string
 	Description string
-	Services    template.JS
+	File        string
+	Services    ServiceList
+	Service     Service
 }
 
 func getTemplate() (*template.Template, error) {
@@ -24,20 +27,14 @@ func getTemplate() (*template.Template, error) {
 	return template.New("ui").Parse(string(data))
 }
 
-func prepareTemplateString(title, description string, tpl *template.Template, services []Service) (string, error) {
-	jsonServices, err := json.Marshal(services)
-	if err != nil {
-		return "", err
+func getTemplateGenerator(title, description string, tpl *template.Template, services ServiceList) templateGenerator {
+	return func(writer io.Writer, service Service) error {
+		return tpl.Execute(writer, templateData{
+			Title:       title,
+			Description: description,
+			File:        service.FileUrl,
+			Services:    services,
+			Service:     service,
+		})
 	}
-	serviceString := string(jsonServices)
-	buf := new(bytes.Buffer)
-	err = tpl.Execute(buf, templateData{
-		Title:       title,
-		Description: description,
-		Services:    template.JS(serviceString),
-	})
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
 }

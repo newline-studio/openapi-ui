@@ -23,13 +23,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	templateResult, err := prepareTemplateString(uiTitle, uiDescription, template, services)
+	generator := getTemplateGenerator(uiTitle, uiDescription, template, services)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Get("/", serveUiHandler(templateResult))
+	r.Get("/", redirectToServiceHandler(services))
+	r.Get("/{name}", serveUiHandler(services, generator))
 	r.Get("/file/{file}", readFileHandler(uiFilePath, services))
 
 	if err = http.ListenAndServe("0.0.0.0:8080", r); err != nil {
@@ -37,16 +38,31 @@ func main() {
 	}
 }
 
-func serveUiHandler(template string) http.HandlerFunc {
-	tplBytes := []byte(template)
+func redirectToServiceHandler(services ServiceList) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		service := services[0]
+		http.Redirect(w, r, service.DocUrl, http.StatusFound)
+	}
+}
+
+func serveUiHandler(services ServiceList, generator templateGenerator) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		_, _ = writer.Write(tplBytes)
+		index := services.Find(chi.URLParam(request, "name"), func(service *Service) string {
+			return service.Name
+		})
+		if index == -1 {
+			http.NotFound(writer, request)
+			return
+		}
+		_ = generator(writer, services[index])
 	}
 }
 
 func readFileHandler(filePath string, services ServiceList) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		index := services.Find(chi.URLParam(request, "file"))
+		index := services.Find(chi.URLParam(request, "file"), func(service *Service) string {
+			return service.File
+		})
 		if index == -1 {
 			http.NotFound(writer, request)
 			return

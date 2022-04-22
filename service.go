@@ -7,9 +7,9 @@ import (
 
 type ServiceList []Service
 
-func (s ServiceList) Find(file string) int {
+func (s ServiceList) Find(value string, reducer func(*Service) string) int {
 	for i, service := range s {
-		if service.File == file {
+		if reducer(&service) == value {
 			return i
 		}
 	}
@@ -17,22 +17,26 @@ func (s ServiceList) Find(file string) int {
 }
 
 type Service struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-	File string `json:"-"`
+	Name    string
+	Title   string
+	FileUrl string
+	DocUrl  string
+	File    string
 }
 
 func getServicesFromString(str string, urlPrefix string) (ServiceList, error) {
 	list := make(ServiceList, 0)
 	for _, serviceString := range strings.Split(str, "|") {
 		partials := strings.Split(serviceString, "::")
-		if len(partials) != 2 {
+		if len(partials) != 3 {
 			return list, errors.New("invalid Format for UI_SERVICES")
 		}
 		list = append(list, Service{
-			Name: partials[0],
-			URL:  urlPrefix + "/file/" + partials[1],
-			File: partials[1],
+			Name:    partials[0],
+			Title:   partials[1],
+			FileUrl: urlPrefix + "/file/" + partials[2],
+			DocUrl:  urlPrefix + "/" + partials[0],
+			File:    partials[2],
 		})
 	}
 	return list, nil
