@@ -1,4 +1,4 @@
-# SwaggerUI
+# OpenAPI UI
 
 - `UI_URL` \
   public url
@@ -11,4 +11,4 @@
 - `UI_SERVICES` \
   list of services with name and filename \
   Services are delimited by a `|` and the name and filename are separated by a `::` \
-  **Example:** `service1::service1.json|service2::service2.json`
+  **Example:** `Name1::service1.json|Name2::service2.json`
