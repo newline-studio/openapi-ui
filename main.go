@@ -31,7 +31,7 @@ func main() {
 
 	r.Get("/", redirectToServiceHandler(services))
 	r.Get("/{name}", serveUiHandler(services, generator))
-	r.Get("/file/{file}", readFileHandler(uiFilePath, services))
+	r.Get("/files/*", readFileHandler(uiFilePath, uiUrl+"/files"))
 
 	if err = http.ListenAndServe("0.0.0.0:8080", r); err != nil {
 		panic(err)
@@ -58,20 +58,9 @@ func serveUiHandler(services ServiceList, generator templateGenerator) http.Hand
 	}
 }
 
-func readFileHandler(filePath string, services ServiceList) http.HandlerFunc {
+func readFileHandler(filePath string, prefix string) http.HandlerFunc {
+	handler := http.StripPrefix(prefix, http.FileServer(http.Dir(filePath)))
 	return func(writer http.ResponseWriter, request *http.Request) {
-		index := services.Find(chi.URLParam(request, "file"), func(service *Service) string {
-			return service.File
-		})
-		if index == -1 {
-			http.NotFound(writer, request)
-			return
-		}
-		file, err := os.ReadFile(filePath + "/" + services[index].File)
-		if err != nil {
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		_, _ = writer.Write(file)
+		handler.ServeHTTP(writer, request)
 	}
 }

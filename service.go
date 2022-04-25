@@ -34,7 +34,7 @@ func getServicesFromString(str string, urlPrefix string) (ServiceList, error) {
 		list = append(list, Service{
 			Name:    partials[0],
 			Title:   partials[1],
-			FileUrl: urlPrefix + "/file/" + partials[2],
+			FileUrl: urlPrefix + "/files/" + partials[2],
 			DocUrl:  urlPrefix + "/" + partials[0],
 			File:    partials[2],
 		})
