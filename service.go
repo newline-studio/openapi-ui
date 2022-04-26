@@ -36,11 +36,12 @@ func getServicesFromString(envPrefix string, envList []string, urlPrefix string)
 			if len(partials) != 2 {
 				return list, errors.New("invalid format for env " + env)
 			}
+			name := strings.ToLower(suffix)
 			list = append(list, Service{
-				Name:    suffix,
+				Name:    name,
 				Title:   partials[0],
 				FileUrl: urlPrefix + "/files/" + partials[1],
-				DocUrl:  urlPrefix + "/" + suffix,
+				DocUrl:  urlPrefix + "/" + name,
 				File:    partials[1],
 			})
 		}
