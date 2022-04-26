@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -34,6 +35,7 @@ func main() {
 	r.Get("/{name}", serveUiHandler(services, generator))
 	r.Get("/files/*", readFileHandler(uiFilePath, uiUrl+"/files"))
 
+	log.Println("Starting openapi-ui server on port 8080...")
 	if err = http.ListenAndServe("0.0.0.0:8080", r); err != nil {
 		panic(err)
 	}
