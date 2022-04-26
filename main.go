@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -59,8 +60,14 @@ func serveUiHandler(services ServiceList, generator templateGenerator) http.Hand
 }
 
 func readFileHandler(filePath string, prefix string) http.HandlerFunc {
+	expires := time.Unix(0, 0).Format(time.RFC1123)
 	handler := http.StripPrefix(prefix, http.FileServer(http.Dir(filePath)))
 	return func(writer http.ResponseWriter, request *http.Request) {
+		headers := writer.Header()
+		headers.Add("Expires", expires)
+		headers.Add("Cache-Control", "no-cache")
+		headers.Add("Pragma", "no-cache")
+		headers.Add("X-Accel-Expires", "0")
 		handler.ServeHTTP(writer, request)
 	}
 }
