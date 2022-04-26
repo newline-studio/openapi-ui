@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"os"
+	"regexp"
 	"strings"
 )
 
@@ -24,20 +26,24 @@ type Service struct {
 	File    string
 }
 
-func getServicesFromString(str string, urlPrefix string) (ServiceList, error) {
+func getServicesFromString(envPrefix string, envList []string, urlPrefix string) (ServiceList, error) {
 	list := make(ServiceList, 0)
-	for _, serviceString := range strings.Split(str, "|") {
-		partials := strings.Split(serviceString, "::")
-		if len(partials) != 3 {
-			return list, errors.New("invalid Format for UI_SERVICES")
+	exp := regexp.MustCompile("=.*$")
+	for _, env := range envList {
+		if strings.Index(env, envPrefix) == 0 {
+			suffix := exp.ReplaceAllString(strings.Replace(env, envPrefix, "", 1), "")
+			partials := strings.Split(os.Getenv(envPrefix+suffix), "|")
+			if len(partials) != 2 {
+				return list, errors.New("invalid format for env " + env)
+			}
+			list = append(list, Service{
+				Name:    suffix,
+				Title:   partials[0],
+				FileUrl: urlPrefix + "/files/" + partials[1],
+				DocUrl:  urlPrefix + "/" + suffix,
+				File:    partials[1],
+			})
 		}
-		list = append(list, Service{
-			Name:    partials[0],
-			Title:   partials[1],
-			FileUrl: urlPrefix + "/files/" + partials[2],
-			DocUrl:  urlPrefix + "/" + partials[0],
-			File:    partials[2],
-		})
 	}
 	return list, nil
 }

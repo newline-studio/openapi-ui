@@ -16,7 +16,8 @@ func main() {
 	uiDescription := os.Getenv("UI_DESCRIPTION")
 	uiFilePath := os.Getenv("UI_FILE_PATH")
 	uiUrl := os.Getenv("UI_URL")
-	services, err := getServicesFromString(os.Getenv("UI_SERVICES"), uiUrl)
+	services, err := getServicesFromString("UI_SERVICE_", os.Environ(), uiUrl)
+
 	if err != nil {
 		panic(err)
 	}
