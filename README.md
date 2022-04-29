@@ -1,7 +1,9 @@
 # OpenAPI UI
 
 - `UI_URL` \
-  public url
+  public url (no tailing slash)
+- `UI_PATH` \
+  path to the ui service (no tailing slash)
 - `UI_TITLE` \
   title-Tag
 - `UI_DESCRIPTION` \

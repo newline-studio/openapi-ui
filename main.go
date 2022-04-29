@@ -5,10 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/newline-studio/swagger-ui/resolver"
 )
 
 func main() {
@@ -16,6 +18,7 @@ func main() {
 	uiDescription := os.Getenv("UI_DESCRIPTION")
 	uiFilePath := os.Getenv("UI_FILE_PATH")
 	uiUrl := os.Getenv("UI_URL")
+	uiPath := os.Getenv("UI_PATH")
 	services, err := getServicesFromString("UI_SERVICE_", os.Environ(), uiUrl)
 
 	if err != nil {
@@ -34,7 +37,8 @@ func main() {
 
 	r.Get("/", redirectToServiceHandler(services))
 	r.Get("/{name}", serveUiHandler(services, generator))
-	r.Get("/files/*", readFileHandler(uiFilePath, uiUrl+"/files"))
+	r.Get("/files/*", noCacheMiddleware(readFileHandler(uiFilePath, uiPath+"/files")))
+	r.Get("/downloads/*", noCacheMiddleware(downloadFileHandler(uiFilePath, uiPath+"/files", uiPath+"/downloads")))
 
 	log.Println("Starting openapi-ui server on port 8080...")
 	if err = http.ListenAndServe("0.0.0.0:8080", r); err != nil {
@@ -62,15 +66,38 @@ func serveUiHandler(services ServiceList, generator templateGenerator) http.Hand
 	}
 }
 
+func downloadFileHandler(filePath string, prefix string, initial string) http.HandlerFunc {
+	pathResolver := func(path string) string {
+		return strings.Replace(path, prefix, filePath, 1)
+	}
+	return func(writer http.ResponseWriter, request *http.Request) {
+		path := strings.Replace(request.URL.Path, initial, prefix, 1)
+		r := resolver.NewResolver(pathResolver)
+		result, err := r.Resolve(path)
+		if err != nil {
+			log.Println("Error resolving path:", err.Error())
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = writer.Write(result)
+	}
+}
+
 func readFileHandler(filePath string, prefix string) http.HandlerFunc {
-	expires := time.Unix(0, 0).Format(time.RFC1123)
 	handler := http.StripPrefix(prefix, http.FileServer(http.Dir(filePath)))
+	return func(writer http.ResponseWriter, request *http.Request) {
+		handler.ServeHTTP(writer, request)
+	}
+}
+
+func noCacheMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	expires := time.Unix(0, 0).Format(time.RFC1123)
 	return func(writer http.ResponseWriter, request *http.Request) {
 		headers := writer.Header()
 		headers.Add("Expires", expires)
 		headers.Add("Cache-Control", "no-cache")
 		headers.Add("Pragma", "no-cache")
 		headers.Add("X-Accel-Expires", "0")
-		handler.ServeHTTP(writer, request)
+		next(writer, request)
 	}
 }

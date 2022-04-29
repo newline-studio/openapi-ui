@@ -20,11 +20,12 @@ func (s ServiceList) Find(value string, reducer func(*Service) string) int {
 }
 
 type Service struct {
-	Name    string
-	Title   string
-	FileUrl string
-	DocUrl  string
-	File    string
+	Name            string
+	Title           string
+	FileUrl         string
+	DownloadFileUrl string
+	DocUrl          string
+	File            string
 }
 
 func getServicesFromString(envPrefix string, envList []string, urlPrefix string) (ServiceList, error) {
@@ -39,11 +40,12 @@ func getServicesFromString(envPrefix string, envList []string, urlPrefix string)
 			}
 			name := strings.ToLower(suffix)
 			list = append(list, Service{
-				Name:    name,
-				Title:   partials[0],
-				FileUrl: urlPrefix + "/files/" + partials[1],
-				DocUrl:  urlPrefix + "/" + name,
-				File:    partials[1],
+				Name:            name,
+				Title:           partials[0],
+				FileUrl:         urlPrefix + "/files/" + partials[1],
+				DownloadFileUrl: urlPrefix + "/downloads/" + partials[1],
+				DocUrl:          urlPrefix + "/" + name,
+				File:            partials[1],
 			})
 		}
 	}

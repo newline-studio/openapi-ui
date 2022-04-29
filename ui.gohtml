@@ -46,6 +46,22 @@
     document.getElementById("api-select").addEventListener("change", function () {
         window.location.href = this.value;
     });
+
+    function applyWhenReady(selector, callback) {
+        let node;
+        let checkInterval
+        checkInterval = setInterval(() => {
+            node = document.querySelectorAll(selector);
+            if (node.length > 0) {
+                clearInterval(checkInterval);
+                callback(node);
+            }
+        }, 200)
+    }
+    applyWhenReady("a[download]", (dl) => {
+        dl = dl[0];
+        dl.setAttribute("href", "{{.Download}}");
+    });
 </script>
 </body>
 </html>

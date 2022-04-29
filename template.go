@@ -15,6 +15,7 @@ type templateData struct {
 	Title       string
 	Description string
 	File        string
+	Download    string
 	Services    ServiceList
 	Service     Service
 }
@@ -33,6 +34,7 @@ func getTemplateGenerator(title, description string, tpl *template.Template, ser
 			Title:       title,
 			Description: description,
 			File:        service.FileUrl,
+			Download:    service.DownloadFileUrl,
 			Services:    services,
 			Service:     service,
 		})
