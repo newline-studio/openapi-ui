@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -46,5 +47,8 @@ func getServicesFromString(envPrefix string, envList []string, urlPrefix string)
 			})
 		}
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return strings.Compare(list[i].Title, list[j].Title) < 0
+	})
 	return list, nil
 }
