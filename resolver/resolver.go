@@ -63,16 +63,16 @@ func (r *Resolver) resolveFile(filepath string) (subTree, error) {
 	data := make(subTree)
 	fileData, err := ioutil.ReadFile(r.pathCleaner(filepath))
 	if err != nil {
-		return data, err
+		return data, errors.New(filepath + " > " + err.Error())
 	}
 	if strings.HasSuffix(filepath, ".yaml") || strings.HasSuffix(filepath, ".yml") {
 		if err = yaml.Unmarshal(fileData, &data); err != nil {
-			return data, err
+			return data, errors.New(filepath + " > " + err.Error())
 		}
 	} else if strings.HasSuffix(filepath, ".json") {
 		jsonData := make(map[string]any)
 		if err = json.Unmarshal(fileData, &jsonData); err != nil {
-			return data, err
+			return data, errors.New(filepath + " > " + err.Error())
 		}
 		data = treeFromJsonData(jsonData)
 	} else {
@@ -81,7 +81,7 @@ func (r *Resolver) resolveFile(filepath string) (subTree, error) {
 
 	data, err = r.traverseAndResolve(data)
 	if err != nil {
-		return data, err
+		return data, errors.New(filepath + " > " + err.Error())
 	}
 	return data, nil
 }
